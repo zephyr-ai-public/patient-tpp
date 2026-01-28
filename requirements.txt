@@ -1,0 +1,5 @@
+easy-tpp==0.2.1
+matplotlib
+numpy==1.26.4
+pandas
+scipy==1.16.3

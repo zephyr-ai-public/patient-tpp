@@ -1,0 +1,9 @@
+patient-tpp.code-workspace
+checkpoints/
+appendix/
+.ipynb_checkpoints/
+xfer/
+*.pyc
+.DS_Store
+test/data/*.json
+mypy.ini

@@ -1,0 +1,124 @@
+ 
+pipeline_config_id: patient_tpp.easy_tpp_zai.config_factory.runner_config.ZaiRunnerConfig
+data:
+  synth-test:
+    data_format: json-streaming-compressed
+    train_dir: synth.train.tiny.json.gz
+    test_dir: synth.test.tiny.json.gz
+    valid_dir: synth.dev.tiny.json.gz
+    numeric_train_dir: synth.numeric.train.tiny.json.gz
+    numeric_test_dir: synth.numeric.test.tiny.json.gz
+    numeric_valid_dir: synth.numeric.dev.tiny.json.gz
+    data_specs:
+      num_event_types: 68
+      num_sex_classes: 3
+      num_race_classes: 4
+      pad_token_id: 65
+      numeric_pad_token_id: 41
+      num_numeric_event_types: 42
+      padding_side: right
+      truncation_side: right
+      padding_strategy: max_length
+      truncation_strategy: longest_first
+      max_len: 64
+      use_invariant_features: True
+      use_numeric_features: True
+
+AttNHP_zai_train:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: synth-test
+    runner_id: zai_tpp
+    model_id: ZaiAttNHP
+    base_dir: './checkpoints'
+  trainer_config:
+    shingle: False
+    dither: False
+    batch_size: 32
+    max_epoch: 2
+    shuffle: False
+    optimizer: adam
+    learning_rate: 1.e-5
+    valid_freq: 1
+    use_tfb: True
+    metrics: [ 'acc', 'rmse', 'diff_ratio' ]
+    seed: 1234
+    gpu: 0
+  model_config:
+    # pretrained_model_dir:
+    return_intensities: False
+    hidden_size: 32
+    time_emb_size: 4
+    num_layers: 5
+    num_heads: 2
+    loss_integral_num_sample_per_step: 25
+    use_mc_samples: True
+    use_ln: False
+    pseudoage_bins: 20
+    pseudoage_embedding_size: 4
+    gender_cardinality: 3
+    gender_embedding_size: 3
+    race_cardinality: 5
+    race_embedding_size: 4
+    clinical_embeddings_path: clinical_embeddings.20250213.pkl    
+    thinning:
+      num_seq: 2
+      num_sample: 1 # number of sampled next event times via thinning algo for computing predictions.
+      num_exp: 50 # number of i.i.d. Exp(intensity_bound) draws at one time in thinning algorithm
+      look_ahead_time: 10 # Dead?
+      patience_counter: 5 # the maximum iteration used in adaptive thinning
+      over_sample_rate: 5 # multiplier for the intensity up bound.
+      num_samples_boundary: 5 # number of sampled event times to compute the boundary of the intensity.
+      dtime_max: 3 # max value of delta times in sampling
+      num_step_gen: 1 # number of steps in multistep prediction
+
+
+AttNHP_zai_gen:
+  base_config:
+    stage: gen
+    backend: torch
+    dataset_id: synth-test
+    runner_id: zai_tpp
+    model_id: ZaiAttNHP
+    base_dir: './checkpoints'
+  trainer_config:
+    shingle: False
+    dither: False
+    batch_size: 2
+    max_epoch: 200
+    shuffle: False
+    optimizer: adam
+    learning_rate: 1.e-5
+    valid_freq: 1
+    use_tfb: False
+    metrics: [ 'acc', 'rmse', 'diff_ratio' ]
+    seed: 2019
+    gpu: 0    
+  model_config:
+    # pretrained_model_dir:
+    return_intensities: True
+    hidden_size: 32
+    time_emb_size: 4
+    num_layers: 5
+    num_heads: 2
+    loss_integral_num_sample_per_step: 25
+    use_ln: False
+    pseudoage_bins: 20
+    pseudoage_embedding_size: 4
+    gender_cardinality: 3
+    gender_embedding_size: 3
+    race_cardinality: 5
+    race_embedding_size: 4    
+    clinical_embeddings: clinical_embeddings.20250213.pkl
+    thinning:
+      num_seq: 1
+      num_sample: 1 # number of sampled next event times via thinning algo for computing predictions.
+      num_exp: 10 # number of i.i.d. Exp(intensity_bound) draws at one time in thinning algorithm
+      look_ahead_time: 10
+      patience_counter: 5 # the maximum iteration used in adaptive thinning
+      over_sample_rate: 5 # multiplier for the intensity up bound.
+      num_samples_boundary: 5 # number of sampled event times to compute the boundary of the intensity.
+      dtime_max: 5 # max value of delta times in sampling
+      num_step_gen: 6 # number of steps in multistep prediction
+
